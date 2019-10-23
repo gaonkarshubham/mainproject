@@ -1,0 +1,62 @@
+> db.tab.insertMany([{cust_id:123,qty: 32},{cust_id:123,qty:20},{cust_id:321,qty:2},{cust_id:421,qty:90},{cust_id:421,qty:20}])
+{
+        "acknowledged" : true,
+        "insertedIds" : [
+                ObjectId("5daf96ac5db462fb03e459fc"),
+                ObjectId("5daf96ac5db462fb03e459fd"),
+                ObjectId("5daf96ac5db462fb03e459fe"),
+                ObjectId("5daf96ac5db462fb03e459ff"),
+                ObjectId("5daf96ac5db462fb03e45a00")
+        ]
+}
+> db.tab.find().pretty()
+{
+        "_id" : ObjectId("5daf96ac5db462fb03e459fc"),
+        "cust_id" : 123,
+        "qty" : 32
+}
+{
+        "_id" : ObjectId("5daf96ac5db462fb03e459fd"),
+        "cust_id" : 123,
+        "qty" : 20
+}
+{ "_id" : ObjectId("5daf96ac5db462fb03e459fe"), "cust_id" : 321, "qty" : 2 }
+{
+        "_id" : ObjectId("5daf96ac5db462fb03e459ff"),
+        "cust_id" : 421,
+        "qty" : 90
+}
+{
+        "_id" : ObjectId("5daf96ac5db462fb03e45a00"),
+        "cust_id" : 421,
+        "qty" : 20
+}
+> var mapfunc = function(){
+... emit(this.cust_id,this.qty);
+... };
+> var reducefunc =function(id,qty){
+... return Array.sum(id,qty);
+... };
+> db.tab.mapReduce(mapfunc, reducefunc,{out: "mapreduce"})
+2019-10-23T05:28:04.865+0530 E  QUERY    [js] uncaught exception: Error: map reduce failed:{
+        "ok" : 0,
+        "errmsg" : "Error: The first argument to Array.sum must be an array :\nArray.sum@src/mongo/shell/types.js:228:15\n@:2:8\n",
+        "code" : 139,
+        "codeName" : "JSInterpreterFailure"
+} :
+_getErrorWithCode@src/mongo/shell/utils.js:25:13
+DBCollection.prototype.mapReduce@src/mongo/shell/collection.js:1085:15
+@(shell):1:1
+> var reducefunc =function(id,qty){ return Array.sum(qty); };
+> db.tab.mapReduce(mapfunc, reducefunc,{out: "mapreduce"})
+{
+        "result" : "mapreduce",
+        "timeMillis" : 56,
+        "counts" : {
+                "input" : 5,
+                "emit" : 5,
+                "reduce" : 2,
+                "output" : 3
+        },
+        "ok" : 1
+}
